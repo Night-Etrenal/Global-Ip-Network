@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
         with:
           repository: Night-Etrenal/ai-rules-manager
-          ref: 4581d536a41428fde279b299c127b1b8bf53ffb1
+          ref: 2071c3f13924c12d6f67677f66e4bc9583cb04f1
           path: security-tool
           fetch-depth: 1
           persist-credentials: false
