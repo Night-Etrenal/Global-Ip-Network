@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "repository_type": "upstream-mirror",
+  "upstream_repository": "hwanz/SSR-V2ray-Trojan",
+  "upstream_branch": "main",
+  "local_overlay_paths": [
+    "AGENTS.md",
+    ".portfolio-security/",
+    ".github/workflows/portfolio-security.yml",
+    ".github/workflows/upstream-drift.yml",
+    "scripts/sync-upstream.sh"
+  ],
+  "sync_policy": "manual-reviewed-merge",
+  "auto_merge": false,
+  "execute_upstream_code_during_sync": false
+}
