@@ -1,0 +1,56 @@
+name: Portfolio security overlay
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portfolio-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan-overlay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    container:
+      image: debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818
+    steps:
+      - name: Install fixed Debian runtime tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates git python3
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Check out mirror
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          path: repository
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out pinned portfolio scanner
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          repository: Night-Etrenal/ai-rules-manager
+          ref: 4581d536a41428fde279b299c127b1b8bf53ffb1
+          path: security-tool
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Fetch upstream without executing it
+        working-directory: repository
+        run: |
+          git remote add portfolio-upstream https://github.com/hwanz/SSR-V2ray-Trojan.git
+          git fetch --no-tags portfolio-upstream main
+
+      - name: Scan local divergence only
+        run: |
+          python3 security-tool/tools/portfolio_security_scan.py \
+            --root repository \
+            --mode overlay \
+            --upstream-ref portfolio-upstream/main
