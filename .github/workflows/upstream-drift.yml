@@ -1,0 +1,44 @@
+name: Upstream drift check
+
+on:
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    container:
+      image: debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818
+    steps:
+      - name: Install fixed Debian runtime tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates git
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Check out mirror without credentials
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Compare with upstream read-only
+        run: |
+          git remote add portfolio-upstream https://github.com/hwanz/SSR-V2ray-Trojan.git
+          git fetch --no-tags portfolio-upstream main
+          behind="$(git rev-list --count HEAD..portfolio-upstream/main)"
+          ahead="$(git rev-list --count portfolio-upstream/main..HEAD)"
+          echo "upstream_behind=$behind"
+          echo "local_overlay_commits=$ahead"
+          if [ "$behind" -gt 0 ]; then
+            echo "::notice title=Upstream update available::$behind upstream commit(s) are available. Run sh scripts/sync-upstream.sh locally for a reviewed update."
+            echo "Changed upstream paths:"
+            git diff --name-only HEAD..portfolio-upstream/main | sed -n '1,200p'
+          else
+            echo "Mirror contains the current upstream history."
+          fi
